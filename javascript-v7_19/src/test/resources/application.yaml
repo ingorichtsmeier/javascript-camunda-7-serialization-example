@@ -10,4 +10,4 @@ spring.datasource:
   username: camunda
   password: camunda
   
-logging.level.org.camunda.bpm.engine.impl.persistence.entity: TRACE
+logging.level.org.camunda.bpm.engine.impl.persistence.entity: INFO

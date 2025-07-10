@@ -1,0 +1,35 @@
+{
+  "components": [
+    {
+      "label": "Reference number",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_15vnv4t",
+        "columns": null
+      },
+      "id": "Field_0oimgud",
+      "key": "ReferenceNumber",
+      "defaultValue": "12345"
+    },
+    {
+      "label": "URL",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_11i5u8b",
+        "columns": null
+      },
+      "id": "Field_0wk3jit",
+      "key": "url",
+      "defaultValue": "http://localhost:7000/wiremock"
+    }
+  ],
+  "type": "default",
+  "id": "startForm",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.36.1"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.23.0",
+  "schemaVersion": 18
+}

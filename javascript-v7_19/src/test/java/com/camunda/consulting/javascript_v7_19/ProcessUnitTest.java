@@ -2,10 +2,14 @@ package com.camunda.consulting.javascript_v7_19;
 
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
+import org.camunda.bpm.engine.runtime.VariableInstance;
 import org.camunda.bpm.engine.test.Deployment;
+import org.camunda.bpm.engine.test.assertions.bpmn.BpmnAwareTests;
 import org.camunda.community.process_test_coverage.spring_test.platform7.ProcessEngineCoverageConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -20,6 +24,8 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 @Import(ProcessEngineCoverageConfiguration.class)
 public class ProcessUnitTest {
+	
+  private static final Logger LOG = LoggerFactory.getLogger(ProcessUnitTest.class);
 
   @Autowired
   private ProcessEngine processEngine;
@@ -36,6 +42,14 @@ public class ProcessUnitTest {
 
     ProcessInstance processInstance = processEngine().getRuntimeService()
         .startProcessInstanceByKey(ProcessConstants.PROCESS_DEFINITION_KEY);
+    
+    assertThat(processInstance).isWaitingAt(findId("Request\nprocessed"));
+    
+    VariableInstance xmlExample = processEngine.getRuntimeService().createVariableInstanceQuery().processInstanceIdIn(processInstance.getId()).variableName("xmlExample").singleResult();
+    LOG.info("serialized: {}", xmlExample.getTypedValue());
+    assertThat(xmlExample.getTypeName()).isEqualTo("application/json");
+    
+    execute(job());
 
     assertThat(processInstance).isEnded()
     .variables()

@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1wi2tfc" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.36.1" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.15.0">
+  <bpmn:collaboration id="Collaboration_0e878vc">
+    <bpmn:participant id="InvestigationsCheckReportStatusServiceParticipant" name="Investigations Check Report Status Service" processRef="InvestigationsCheckReportStatusService" />
+  </bpmn:collaboration>
+  <bpmn:process id="InvestigationsCheckReportStatusService" name="[Investigations Service Call]  Check Report Status" isExecutable="true">
+    <bpmn:scriptTask id="Activity_0dqrhe4" name="Check Report Status" scriptFormat="JavaScript" camunda:resultVariable="">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="method">POST</camunda:inputParameter>
+          <camunda:inputParameter name="contentType">application/json</camunda:inputParameter>
+          <camunda:inputParameter name="resultType">Json</camunda:inputParameter>
+          <camunda:inputParameter name="requestBody">{"processID": ${ReferenceNumber}}</camunda:inputParameter>
+          <camunda:inputParameter name="timeout">360000</camunda:inputParameter>
+          <camunda:inputParameter name="url">${url}/detail-investigation-log/report-status/check</camunda:inputParameter>
+          <camunda:inputParameter name="serviceCallResponse">checkReportResponse</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0wrhwjm</bpmn:incoming>
+      <bpmn:outgoing>Flow_018z6ja</bpmn:outgoing>
+      <bpmn:script>var var_method = execution.getVariable('method');
+var var_url = execution.getVariable('url');
+var var_contenttype = execution.getVariable('contentType');
+var var_timeout = parseInt(execution.getVariable('timeout'));
+var var_body = execution.getVariable('requestBody');
+var var_response = execution.getVariable('serviceCallResponse');
+var var_responseType = execution.getVariable('resultType');
+var doc;
+var resBody = "";
+var resStatusCode = 9;
+execution.setVariable("SystemError", 0);
+
+try {
+	with (new JavaImporter(org.jsoup)){  
+		if(var_method==='GET'){  
+			var doc = Jsoup.connect(var_url).method(Java.type('org.jsoup.Connection.Method').GET).header('Accept', 'application/json').header('Content-Type', var_contenttype).timeout(var_timeout).ignoreContentType(true).execute();  
+			}  
+		else if(var_method==='POST'){  
+			var doc = Jsoup.connect(var_url).method(Java.type('org.jsoup.Connection.Method').POST).header('Accept', 'application/json').header('Content-Type', var_contenttype).requestBody(var_body).timeout(var_timeout).ignoreContentType(true).execute();  
+		}  
+		var resBody = doc.body();  
+		var resStatusCode = doc.statusCode();  
+		var resStatusMessage = doc.statusMessage();  
+		var resContentType = doc.contentType();  
+		var resCharSet = doc.charset();
+	}
+} catch(error) {
+	var message = null;
+	with(new JavaImporter(java.lang)) {
+                print("error from Rest call:" + error);
+		if(error instanceof Java.type('java.lang.Throwable')) {
+			message = error.message + " " + error.url + " " + error.statusCode;
+		} else {
+			message = (error.name?error.name:"")+(error.message?error.message:"")+(error.stack?error.stack:"");   
+		}
+    }
+execution.setVariable("CatchedError", message);
+execution.setVariable("SystemError", 1);
+}
+
+function spinify(body){  
+	var parsed = JSON.parse(body);  
+	var stringified = JSON.stringify(parsed); 
+	if(var_responseType==='String'){
+		return stringified;
+	} 
+		var spin = S(stringified);  
+		return spin;
+}
+
+if(resStatusCode != 9){
+	execution.setVariable(var_response, spinify(resBody));
+}</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:startEvent id="StartEvent_1" camunda:formRef="startForm" camunda:formRefBinding="latest">
+      <bpmn:outgoing>Flow_1a05dzw</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="Activity_1jh5t36" name="Set Call Counter" scriptFormat="JavaScript">
+      <bpmn:incoming>Flow_1a05dzw</bpmn:incoming>
+      <bpmn:outgoing>Flow_0wrhwjm</bpmn:outgoing>
+      <bpmn:script>execution.setVariable("CallCounter", 0);
+execution.setVariable("APIResponse", " ");
+execution.setVariable("BusinessError", 0);
+execution.setVariable("SystemError", 0);
+execution.setVariable("RetryTimer", "PT30M");</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1a05dzw" sourceRef="StartEvent_1" targetRef="Activity_1jh5t36" />
+    <bpmn:sequenceFlow id="Flow_1q2pygu" name="CallAPIAgain" sourceRef="Gateway_0u324a4" targetRef="Event_0fxwc0e">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${APIResponse eq 'CallAPIAgain'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0wrhwjm" sourceRef="Activity_1jh5t36" targetRef="Activity_0dqrhe4" />
+    <bpmn:sequenceFlow id="Flow_073if2k" sourceRef="Activity_1frtaxs" targetRef="Event_0fxwc0e" />
+    <bpmn:intermediateCatchEvent id="Event_0fxwc0e" name="Retry">
+      <bpmn:incoming>Flow_073if2k</bpmn:incoming>
+      <bpmn:incoming>Flow_1q2pygu</bpmn:incoming>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_0tl14co">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${RetryTimer}</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1luoix4" name="SendMail" sourceRef="Gateway_0u324a4" targetRef="Activity_1frtaxs">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${APIResponse eq 'SendMail'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0wa26zr" name="CompleteAPICall" sourceRef="Gateway_0u324a4" targetRef="Event_084heze">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${APIResponse eq 'CompleteAPICall'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_041glkl" sourceRef="Activity_1jg1izz" targetRef="Gateway_0u324a4" />
+    <bpmn:endEvent id="Event_084heze">
+      <bpmn:incoming>Flow_0wa26zr</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:callActivity id="Activity_1frtaxs" name="Send Mail" calledElement="DistraintSendErrorMailService">
+      <bpmn:extensionElements>
+        <camunda:in variables="all" />
+        <camunda:out variables="all" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1luoix4</bpmn:incoming>
+      <bpmn:outgoing>Flow_073if2k</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="Gateway_0u324a4">
+      <bpmn:incoming>Flow_041glkl</bpmn:incoming>
+      <bpmn:outgoing>Flow_1q2pygu</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0wa26zr</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1luoix4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="Activity_1jg1izz" name="Check API Response" scriptFormat="JavaScript">
+      <bpmn:outgoing>Flow_041glkl</bpmn:outgoing>
+      <bpmn:script>var systemError = execution.getVariable("SystemError");
+var counter = execution.getVariable("CallCounter");
+
+if(systemError == 1) {
+	retryForTechnicalError();
+} else {
+	var responseJsonString = execution.getVariable("checkReportResponse");
+	var responseObject = JSON.parse(responseJsonString);
+	var isSuccess = responseJsonString.prop("responseHeader").prop("success").toString();
+
+	if(isSuccess == "true"){
+		var reportStatus = responseJsonString.prop("reportCreated").toString();
+		if(reportStatus == "true"){
+			var reportCreateDate = responseObject.reportCreateDate;
+			execution.setVariable("DwhReportCreateDate", reportCreateDate);
+			execution.setVariable("APIResponse", "CompleteAPICall");
+			execution.setVariable("BusinessError", 0);
+			execution.setVariable("ReportStatus", true);
+		} else {
+			execution.setVariable("RetryTimer", "PT1H");
+			execution.setVariable("APIResponse", "CallAPIAgain");
+            execution.setVariable("ProcessStatus", "Rapor bekleniyor.");
+			var superProcessInstanceId = execution.getSuperExecution().getProcessInstanceId();
+			var runtimeService = execution.getProcessEngineServices().getRuntimeService();
+			runtimeService.setVariable(execution.getSuperExecution().getProcessInstanceId(), "ProcessStatus", "Rapor bekleniyor.");
+			execution.setVariable("superProcessInstanceId", superProcessInstanceId);
+			execution.setVariable("ReportStatus", false);			
+		}
+	} else {
+		execution.setVariable("APIResponse", "CompleteAPICall");
+		execution.setVariable("BusinessError", 1);
+        execution.setVariable("IsReturnedFromNextStep", true);		
+	}
+}
+
+function retryForTechnicalError() {
+	execution.setVariable("ProcessStatus", "Rapor Kontrol Servisi hata almıştır.");
+	execution.setVariable("APIResponse", "CallAPIAgain");	
+	counter = counter + 1;
+	execution.setVariable("CallCounter", counter);
+	if(counter == 3) {
+		execution.setVariable("APIResponse", "SendMail");
+		execution.setVariable("ErrorServiceName", "Rapor Kontrol /InvestigationsCheckReportStatusServices");
+        execution.setVariable("RetryTimer", "PT8H");
+		var superProcessInstanceId = execution.getSuperExecution().getProcessInstanceId();
+		var runtimeService = execution.getProcessEngineServices().getRuntimeService();
+		runtimeService.setVariable(execution.getSuperExecution().getProcessInstanceId(), "ProcessStatus", "Rapor Kontrol Servisi hata almıştır.");
+		execution.setVariable("superProcessInstanceId", superProcessInstanceId);
+	}
+}</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="Event_0xmzmku" name="Test completed" camunda:asyncBefore="true">
+      <bpmn:incoming>Flow_018z6ja</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_018z6ja" sourceRef="Activity_0dqrhe4" targetRef="Event_0xmzmku" />
+  </bpmn:process>
+  <bpmn:message id="Message_0krobzj" name="TestMessage" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_0e878vc">
+      <bpmndi:BPMNShape id="Participant_0k8rkw4_di" bpmnElement="InvestigationsCheckReportStatusServiceParticipant" isHorizontal="true">
+        <dc:Bounds x="160" y="120" width="1140" height="570" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0dqrhe4_di" bpmnElement="Activity_0dqrhe4" bioc:stroke="#8e24aa" bioc:fill="#e1bee7" color:background-color="#e1bee7" color:border-color="#8e24aa">
+        <dc:Bounds x="460" y="150" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="212" y="172" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ong876_di" bpmnElement="Activity_1jh5t36" bioc:stroke="#8e24aa" bioc:fill="#e1bee7" color:background-color="#e1bee7" color:border-color="#8e24aa">
+        <dc:Bounds x="290" y="150" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0yprxhj_di" bpmnElement="Event_0fxwc0e">
+        <dc:Bounds x="762" y="172" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="768" y="151" width="27" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_084heze_di" bpmnElement="Event_084heze">
+        <dc:Bounds x="762" y="500" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_17brs7x_di" bpmnElement="Activity_1frtaxs" bioc:stroke="#e53935" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#e53935">
+        <dc:Bounds x="1000" y="311" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0u324a4_di" bpmnElement="Gateway_0u324a4" isMarkerVisible="true">
+        <dc:Bounds x="755" y="326" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1eqaumk_di" bpmnElement="Activity_1jg1izz" bioc:stroke="#8e24aa" bioc:fill="#e1bee7" color:background-color="#e1bee7" color:border-color="#8e24aa">
+        <dc:Bounds x="460" y="311" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0xmzmku_di" bpmnElement="Event_0xmzmku">
+        <dc:Bounds x="632" y="172" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="613" y="215" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1a05dzw_di" bpmnElement="Flow_1a05dzw">
+        <di:waypoint x="248" y="190" />
+        <di:waypoint x="290" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1q2pygu_di" bpmnElement="Flow_1q2pygu">
+        <di:waypoint x="780" y="326" />
+        <di:waypoint x="780" y="208" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="708" y="265" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0wrhwjm_di" bpmnElement="Flow_0wrhwjm">
+        <di:waypoint x="390" y="190" />
+        <di:waypoint x="460" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_073if2k_di" bpmnElement="Flow_073if2k">
+        <di:waypoint x="1050" y="311" />
+        <di:waypoint x="1050" y="190" />
+        <di:waypoint x="798" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1luoix4_di" bpmnElement="Flow_1luoix4">
+        <di:waypoint x="805" y="351" />
+        <di:waypoint x="1000" y="351" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="888" y="333" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0wa26zr_di" bpmnElement="Flow_0wa26zr">
+        <di:waypoint x="780" y="376" />
+        <di:waypoint x="780" y="500" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="688" y="432" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_041glkl_di" bpmnElement="Flow_041glkl">
+        <di:waypoint x="560" y="351" />
+        <di:waypoint x="755" y="351" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_018z6ja_di" bpmnElement="Flow_018z6ja">
+        <di:waypoint x="560" y="190" />
+        <di:waypoint x="632" y="190" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,32 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.34.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.36.1">
   <bpmn:process id="javascript-v7_19" name="javascript-v7_19" isExecutable="true">
     <bpmn:startEvent id="StartEvent" name="Request&#10;received">
       <bpmn:outgoing>SequenceFlow1</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:sequenceFlow id="SequenceFlow1" sourceRef="StartEvent" targetRef="ServiceTask_Logger" />
+    <bpmn:sequenceFlow id="SequenceFlow1" sourceRef="StartEvent" targetRef="Activity_05pdyb0" />
     <bpmn:sequenceFlow id="SequenceFlow2" sourceRef="ServiceTask_Logger" targetRef="EndEvent" />
-    <bpmn:endEvent id="EndEvent" name="Request&#10;processed">
+    <bpmn:endEvent id="EndEvent" name="Request&#10;processed" camunda:asyncBefore="true">
       <bpmn:incoming>SequenceFlow2</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:scriptTask id="ServiceTask_Logger" name="should fail here" scriptFormat="javascript">
-      <bpmn:incoming>SequenceFlow1</bpmn:incoming>
+      <bpmn:incoming>Flow_0phsnvl</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow2</bpmn:outgoing>
       <bpmn:script>var xmlExample={
   id: 101,
   name: "Example Object",
-  xmlContent: `
-    &lt;note&gt;
-      &lt;to&gt;Ali&lt;/to&gt;
-      &lt;from&gt;Ayşe&lt;/from&gt;
-      &lt;heading&gt;Reminder&lt;/heading&gt;
-      &lt;body&gt;Don't forget to bring the documents!&lt;/body&gt;
-    &lt;/note&gt;
-  `
+  xmlContent: "normal text"
 };
-
-execution.setVariable("xmlExample",xmlExample);</bpmn:script>
+print("set variable now");
+execution.setVariable("xmlExample", xmlExample);</bpmn:script>
     </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0phsnvl" sourceRef="Activity_05pdyb0" targetRef="ServiceTask_Logger" />
+    <bpmn:serviceTask id="Activity_05pdyb0" name="Set Json variable" camunda:delegateExpression="${logger}">
+      <bpmn:incoming>SequenceFlow1</bpmn:incoming>
+      <bpmn:outgoing>Flow_0phsnvl</bpmn:outgoing>
+    </bpmn:serviceTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="javascript-v7_19">
@@ -43,22 +41,29 @@ execution.setVariable("xmlExample",xmlExample);</bpmn:script>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_08f88ck_di" bpmnElement="ServiceTask_Logger">
-        <dc:Bounds x="337" y="80" width="100" height="80" />
+        <dc:Bounds x="390" y="80" width="100" height="80" />
         <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1gw75u0_di" bpmnElement="Activity_05pdyb0">
+        <dc:Bounds x="250" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_08va5r8_di" bpmnElement="SequenceFlow1">
         <di:waypoint x="209" y="120" />
-        <di:waypoint x="337" y="120" />
+        <di:waypoint x="250" y="120" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="228" y="95" width="90" height="20" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow2_di" bpmnElement="SequenceFlow2">
-        <di:waypoint x="437" y="120" />
+        <di:waypoint x="490" y="120" />
         <di:waypoint x="556" y="120" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="496.5" y="99" width="0" height="12" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0phsnvl_di" bpmnElement="Flow_0phsnvl">
+        <di:waypoint x="350" y="120" />
+        <di:waypoint x="390" y="120" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
