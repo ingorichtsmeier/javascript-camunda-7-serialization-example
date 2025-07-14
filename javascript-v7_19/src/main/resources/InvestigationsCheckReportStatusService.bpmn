@@ -47,7 +47,8 @@ try {
 } catch(error) {
 	var message = null;
 	with(new JavaImporter(java.lang)) {
-                print("error from Rest call:" + error);
+		print("error from Rest call:" + error);
+		execution.setVariable("originalError", error);
 		if(error instanceof Java.type('java.lang.Throwable')) {
 			message = error.message + " " + error.url + " " + error.statusCode;
 		} else {
